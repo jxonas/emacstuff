@@ -84,6 +84,14 @@
    'paredit-backward-delete
    'paredit-close-round)
 #+end_src
+** Multiple cursors
+#+begin_src emacs-lisp
+  (global-set-key (kbd "<f8> m b") 'mc/edit-beginnings-of-lines)
+  (global-set-key (kbd "<f8> m e") 'mc/edit-ends-of-lines)
+  (global-set-key (kbd "<f8> m a") 'mc/mark-all-dwim)
+  (global-set-key (kbd "C->") 'mc/mark-next-like-this)
+  (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+#+end_src
 * Ido
 #+begin_src emacs-lisp
   (when (> emacs-major-version 21)
