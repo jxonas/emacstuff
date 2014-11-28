@@ -8,7 +8,16 @@
 #+end_src
 ** Base directory
 #+begin_src emacs-lisp
-  (cd "u:/sandbox")
+  (when (eq 'windows-nt system-type)
+    (cd "u:/sandbox"))
+
+  (setq sandbox-directory
+        (case system-type
+          (windows-nt "u:/sandbox/")
+          (t "~/sandbox/")))
+
+  (defsubst jx--sandbox-file (file)
+    (expand-file-name file sandbox-directory))
 #+end_src
 ** Server
 #+begin_src emacs-lisp
@@ -279,7 +288,7 @@
   (global-set-key (kbd "<f9> r") 
                   (lambda ()
                     (interactive)
-                    (find-file "u:/sandbox/sandbox.rkt")))
+                    (find-file (jx--sandbox-file "sandbox.rkt"))))
 
   (defun racket-repl--bol ()
     (interactive)
@@ -328,7 +337,7 @@
 ** Directories
 #+begin_src emacs-lisp
   (setq org-directory "~/.org")
-  (setq org-default-notes-file "~/org/refile.org")
+  (setq org-default-notes-file "~/.org/refile.org")
 #+end_src
 
 ** TODO Keywords
