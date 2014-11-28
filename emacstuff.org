@@ -463,6 +463,35 @@
    '(parameterize-from-config struct))
 
 #+end_SRC
+* Indentation and buffer cleanup
+#+begin_src emacs-lisp
+  (defun jx-untabify-buffer ()
+    (interactive)
+    (untabify (point-min) (point-max)))
+
+  (defun jx-indent-buffer ()
+    (interactive)
+    (indent-region (point-min) (point-max)))
+
+  (defun jx-cleanup-buffer ()
+    "Perform a bunch of operations on the whitespace content of a buffer."
+    (interactive)
+    (jx-indent-buffer)
+    (jx-untabify-buffer)
+    (delete-trailing-whitespace))
+
+  (defun jx-cleanup-region (beg end)
+    "Remove tmux artifacts from region."
+    (interactive "r")
+    (dolist (re '("\\\\│\·*\n" "\W*│\·*"))
+      (replace-regexp re "" nil beg end)))
+
+  (global-set-key (kbd "C-x M-t") 'jx-cleanup-region)
+  (global-set-key (kbd "C-c n") 'jx-cleanup-buffer)
+
+  (setq-default show-trailing-whitespace t)
+#+end_src
+
 * General key bindings
 #+begin_src emacs-lisp
   (global-set-key (kbd "<f5>") (lambda () (interactive) (revert-buffer 'ignore-auto 'noconfirm)))
