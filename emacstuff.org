@@ -115,6 +115,7 @@
       multiple-cursors
       expand-region
       boxquote
+      auto-complete
       smex
       deft
       imenu-anywhere
@@ -167,6 +168,11 @@
   (require 'iedit)
 
   (global-set-key (kbd "C-c ;") 'iedit-mode)
+#+end_src
+** Auto-complete
+#+begin_src emacs-lisp
+  (require 'auto-complete-config)
+  (ac-config-default)
 #+end_src
 ** Multiple cursors
 #+begin_src emacs-lisp
