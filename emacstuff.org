@@ -513,6 +513,30 @@
 
   (setq-default show-trailing-whitespace t)
 #+end_src
+* Power Lisp
+#+begin_src emacs-lisp
+  (setq lisp-modes '(lisp-mode
+                     emacs-lisp-mode
+                     common-lisp-mode
+                     scheme-mode
+                     racket-mode
+                     clojure-mode))
+
+  (defvar lisp-power-map (make-keymap))
+  (define-minor-mode lisp-power-mode "Fix keybindings; add power."
+    :lighter " (power)"
+    :keymap lisp-power-map
+    (paredit-mode t))
+  (define-key lisp-power-map [delete] 'paredit-forward-delete)
+  (define-key lisp-power-map [backspace] 'paredit-backward-delete)
+
+  (defun jx--engage-lisp-power ()
+    (lisp-power-mode t))
+
+  (dolist (mode lisp-modes)
+    (add-hook (intern (format "%s-hook" mode))
+              #'jx--engage-lisp-power))
+#+end_src
 
 * General key bindings
 #+begin_src emacs-lisp
@@ -547,10 +571,3 @@
   (when (file-exists-p emacstuff--user-settings-file)
     (org-babel-load-file emacstuff--user-settings-file))
 #+end_src
-
-
-
-
-
-
-
