@@ -359,6 +359,90 @@
       (when file
         (find-file file))))
 #+end_src
+** Archive
+#+begin_src emacs-lisp
+  (setq org-archive-mark-done nil)
+  (setq org-archive-location "%s_archive::* Archived Tasks")
+#+end_src
+** Loggin stuff
+#+begin_src emacs-lisp
+  (setq org-log-done (quote time))
+  (setq org-log-into-drawer t)
+  (setq org-log-state-notes-insert-after-drawers nil)
+#+end_src
+** Custom agendas
+#+begin_src emacs-lisp
+  ;; Do not dim blocked tasks
+  (setq org-agenda-dim-blocked-tasks nil)
+
+  ;; Compact the block agenda view
+  (setq org-agenda-compact-blocks t)
+
+  ;; Custom agenda command definitions
+  (setq org-agenda-custom-commands
+        '(("b" "New Backlog Items" tags-todo "new"
+           ((org-agenda-overriding-header "New Backlog Items")
+            (org-tags-match-list-sublevels nil)))
+          (" " "Agenda"
+           (;(agenda "Cockpit" nil)
+            (todo "NEXT"
+                  ((org-agenda-overriding-header "In Progress"))
+                  (org-agenda-skip-function '(jx--org-agenda-skip-tag "new")))
+            (todo "TODO"
+                  ((org-agenda-overriding-header "Backlog")
+                   (org-agenda-skip-function '(jx--org-agenda-skip-tag "new"))))
+            (tags "new"
+                  ((org-agenda-overriding-header "New Backlog Items")
+                   (org-tags-match-list-sublevels nil)))
+            (todo "WAITING"
+                  ((org-agenda-overriding-header "Waiting..."))
+                  (org-agenda-skip-function '(jx--org-agenda-skip-tag "new")))
+            (tags "REFILE"
+                  ((org-agenda-overriding-header "Tasks to Refile")
+                   (org-tags-match-list-sublevels nil)))
+            (tags "-REFILE/"
+                  ((org-agenda-overriding-header "Tasks to Archive")
+                   (org-agenda-skip-function 'jx--skip-non-archivable-tasks)
+                   (org-tags-match-list-sublevels nil))))
+           nil)))
+
+  (defun jx--org-agenda-skip-tag (tag &optional others)
+    "Skip all entries that correspond to TAG. If OTHERS is true, skip all entries that do not correspond to TAG."
+    (let ((next-headline (save-excursion (or (outline-next-heading) (point-max))))
+          (current-headline (or (and (org-at-heading-p)
+                                     (point))
+                                (save-excursion (org-back-to-heading)))))
+      (if others
+          (if (not (member tag (org-get-tags-at current-headline)))
+              next-headline
+            nil)
+        (if (member tag (org-get-tags-at current-headline))
+            next-headline
+          nil))))
+
+  (defun jx--skip-non-archivable-tasks ()
+    "Skip trees that are not available for archiving"
+    (save-restriction
+      (widen)
+      ;; Consider only tasks with done todo headings as archivable candidates
+      (let ((next-headline (save-excursion (or (outline-next-heading) (point-max))))
+            (subtree-end (save-excursion (org-end-of-subtree t))))
+        (if (member (org-get-todo-state) org-todo-keywords-1)
+            (if (member (org-get-todo-state) org-done-keywords)
+                (let* ((daynr (string-to-int (format-time-string "%d" (current-time))))
+                       (a-month-ago (* 60 60 24 (+ daynr 1)))
+                       (last-month (format-time-string "%Y-%m-" (time-subtract (current-time) (seconds-to-time a-month-ago))))
+                       (this-month (format-time-string "%Y-%m-" (current-time)))
+                       (subtree-is-current (save-excursion
+                                             (forward-line 1)
+                                             (and (< (point) subtree-end)
+                                                  (re-search-forward (concat last-month "\\|" this-month) subtree-end t)))))
+                  (if subtree-is-current
+                      subtree-end ; Has a date in this month or last month, skip it
+                    nil))  ; available to archive
+              (or subtree-end (point-max)))
+          next-headline))))
+#+end_src
 ** Directories
 #+begin_src emacs-lisp
   (setq org-directory "~/.org")
