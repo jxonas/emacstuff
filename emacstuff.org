@@ -1,14 +1,86 @@
 #+SEQ_TODO: FIXME FIXED
 
-* Basics
-** UI
+* Basic configuration
+** Custom.el
+#+begin_src emacs-lisp
+  (setq custom-file (emacstuff-file "custom.el"))
+  (load custom-file)
+#+end_src
+** Base directory
+#+begin_src emacs-lisp
+  (cd "u:/sandbox")
+#+end_src
+** Server
+#+begin_src emacs-lisp
+  (server-start)
+  (remove-hook 'kill-buffer-query-functions 'server-kill-buffer-query-function)
+#+end_src
+** Encoding
+#+begin_src emacs-lisp
+  (prefer-coding-system 'utf-8)
+  (set-default-coding-systems 'utf-8)
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+
+  ;; Treat clipboard input as UTF-8 string first; compound text next, etc.
+  (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING))
+#+end_src
+** Start Maximized
+#+begin_src emacs-lisp
+ (add-hook 'window-setup-hook 'toggle-frame-maximized t)
+#+end_src
+** Basic modes
 #+begin_src emacs-lisp
   (setq inhibit-splash-screen t)
   (show-paren-mode 1)
   (tool-bar-mode -1)
   (menu-bar-mode -1)
+
+  (tooltip-mode -1)
+  (setq tooltip-use-echo-area t)
+
+  (put 'narrow-to-region 'disabled nil)
 #+end_src
-** Eldoc
+** Remove prompts
+#+begin_src emacs-lisp
+  (fset 'yes-or-no-p 'y-or-n-p)
+  (setq confirm-nonexistent-file-or-buffer nil)
+  (setq ido-create-new-buffer 'always)
+  (setq inhibit-startup-message t
+        inhibit-startup-echo-area-message t)
+  (setq kill-buffer-query-functions
+    (remq 'process-kill-buffer-query-function
+           kill-buffer-query-functions))
+#+end_src
+** Recentf
+#+begin_src emacs-lisp
+  (require 'recentf)
+
+  ;; get rid of `find-file-read-only' and replace it with something
+  ;; more useful.
+  (global-set-key (kbd "C-x C-r") 'ido-recentf-open)
+
+  ;; enable recent files mode.
+  (recentf-mode t)
+
+  ; 50 files ought to be enough.
+  (setq recentf-max-saved-items 50)
+
+  (defun ido-recentf-open ()
+    "Use `ido-completing-read' to \\[find-file] a recent file"
+    (interactive)
+    (if (find-file (ido-completing-read "Find recent file: " recentf-list))
+        (message "Opening file...")
+      (message "Aborting")))
+#+end_src
+** Backup and recycle bin
+#+begin_src emacs-lisp
+  (setq backup-directory-alist `((".*" . ,temporary-file-directory)))
+  (setq auto-save-file-name-transforms `((".*" ,temporary-file-directory t)))
+
+  (setq delete-by-moving-to-trash t)
+#+end_src
+* Eldoc
 #+begin_src emacs-lisp
   (require 'eldoc)
 
@@ -16,20 +88,7 @@
   (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
   (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)
 #+end_src
-** General key bindings
-#+begin_src emacs-lisp
-  (global-set-key (kbd "<f8> x e")
-    (lambda () 
-      (interactive)
-      (find-file (emacstuff-file "emacstuff.org"))))
-
-  (global-set-key (kbd "<f8> x x")
-    (lambda () 
-      (interactive)
-      (kill-buffer "emacstuff.org")))
-#+end_src
-
-* Dependencies
+* Dependencies and packages
 ** Package setup
 #+begin_src emacs-lisp
   (require 'package)
@@ -42,15 +101,24 @@
   (package-initialize)
     
   (defvar emacstuff-packages
-    '(;yasnippet-bundle 
-      paredit 
+    '(paredit 
       highlight-parentheses 
       multiple-cursors 
       expand-region 
       boxquote
       smex
+      imenu-anywhere
+      visible-mark
       magit
-      ido-ubiquitous)
+      pretty-lambdada
+      ;color-theme
+      ;zenburn-theme
+      iedit
+      ;geiser
+      ido-ubiquitous
+      racket-mode
+      rainbow-delimiters
+     )
     "Libraries that should be installed by default.")
     
   (unless package-archive-contents
@@ -67,7 +135,7 @@
 
   ;; Old M-x.
   (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
-#+end_src
+  #+end_src
 ** Paredit
 #+begin_src emacs-lisp
   (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
@@ -84,6 +152,12 @@
    'paredit-backward-delete
    'paredit-close-round)
 #+end_src
+** Iedit
+#+begin_src emacs-lisp
+  (require 'iedit)
+
+  (global-set-key (kbd "C-c ;") 'iedit-mode)
+#+end_src
 ** Multiple cursors
 #+begin_src emacs-lisp
   (global-set-key (kbd "<f8> m b") 'mc/edit-beginnings-of-lines)
@@ -92,6 +166,49 @@
   (global-set-key (kbd "C->") 'mc/mark-next-like-this)
   (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
 #+end_src
+** Pretty lambda
+#+begin_src emacs-lisp
+  (require 'pretty-lambdada)
+  (add-to-list 'pretty-lambda-auto-modes 'racket-mode)
+  (pretty-lambda-for-modes)
+#+end_src
+** RainbowDelimiters
+   #+begin_src emacs-lisp
+     (require 'rainbow-delimiters)
+     (add-hook 'racket-mode-hook 'rainbow-delimiters-mode)
+   #+END_SRC
+** Expand region
+#+begin_src emacs-lisp
+  (require 'expand-region)
+  (global-set-key (kbd "C-=") 'er/expand-region)
+#+end_src
+* Occur
+#+begin_src emacs-lisp
+  (eval-when-compile
+    (require 'cl))
+
+  (defun get-buffers-matching-mode (mode)
+    "Returns a list of buffers where their major-mode is equal to MODE"
+    (let ((buffer-mode-matches '()))
+     (dolist (buf (buffer-list))
+       (with-current-buffer buf
+         (if (eq mode major-mode)
+             (add-to-list 'buffer-mode-matches buf))))
+     buffer-mode-matches))
+
+  (defun multi-occur-in-this-mode ()
+    "Show all lines matching REGEXP in buffers with this major mode."
+    (interactive)
+    (multi-occur
+     (get-buffers-matching-mode major-mode)
+     (car (occur-read-primary-args))))
+
+
+  (global-set-key (kbd "C-<f1>") 'occur)
+
+  ;; global key for `multi-occur-in-this-mode' - you should change this.
+  (global-set-key (kbd "C-<f2>") 'multi-occur-in-this-mode)
+#+END_SRC
 * Ido
 #+begin_src emacs-lisp
   (when (> emacs-major-version 21)
@@ -155,141 +272,84 @@
         (jx--completing-read-file/short-path prompt files)))
 
 #+end_src
-* org-mode
-** Basic
+* Racket mode
+#+begin_src emacs-lisp
+  (require 'racket-mode)
+
+  (global-set-key (kbd "<f9> r") 
+                  (lambda ()
+                    (interactive)
+                    (find-file "u:/sandbox/sandbox.rkt")))
+
+  (defun racket-repl--bol ()
+    (interactive)
+    (when (= (point) (comint-bol)) (beginning-of-line)))
+
+  (defun racket-repl--last-prompt-end ()
+    (cond ((and (boundp 'comint-last-prompt) (markerp (cdr comint-last-prompt)))
+           (marker-position (cdr comint-last-prompt)))
+          ((and (boundp 'comint-last-prompt-overlay) comint-last-prompt-overlay)
+           (overlay-end comint-last-prompt-overlay))
+          (t (save-excursion (racket-repl--bol) (point)))))
+
+  (defun racket-repl--last-prompt-start ()
+    (cond ((and (boundp 'comint-last-prompt) (markerp (car comint-last-prompt)))
+           (marker-position (car comint-last-prompt)))
+          ((and (boundp 'comint-last-prompt-overlay) comint-last-prompt-overlay)
+           (overlay-start comint-last-prompt-overlay))
+          (t (save-excursion (racket-repl--bol) (point)))))
+
+  (defun racket-repl-clear-buffer ()
+    "Delete the output generated by the scheme process."
+    (interactive)
+    (let ((inhibit-read-only t))
+      (delete-region (point-min) (racket-repl--last-prompt-start))
+      (when (< (point) (racket-repl--last-prompt-end))
+        (goto-char (racket-repl--last-prompt-end)))
+      (recenter t)))
+
+  (define-key racket-repl-mode-map "\C-c\M-o" 'racket-repl-clear-buffer)
+#+END_SRC
+* Org-mode
+** Agenda
 #+begin_src emacs-lisp
   (setq org-agenda-archives-mode nil)
-#+end_src
-** Modules
-#+begin_src emacs-lisp
-  (require 'org-habit)
-  
-  ; Enable habit tracking (and a bunch of other modules)
-  (setq org-modules (quote (org-bbdb
-                            org-bibtex
-                            org-crypt
-                            org-gnus
-                            org-id
-                            org-info
-                            org-jsinfo
-                            org-habit
-                            org-inlinetask
-                            org-irc
-                            org-mew
-                            org-mhe
-                            org-protocol
-                            org-rmail
-                            org-vm
-                            org-wl
-                            org-w3m)))
+  (setq org-agenda-skip-comment-trees nil)
+  (setq org-agenda-skip-function nil)
 
-  ; position the habit graph on the agenda to the right of the default
-  (setq org-habit-graph-column 50)
+  (global-set-key (kbd "<f9> a s") 'jx-ido-find-agenda-file)
+
+  (defun jx-ido-find-agenda-file (full-path)
+    (interactive "P")
+    (let ((file (jx--completing-read-file "Agenda file: " (org-agenda-files t 'ifmode) full-path)))
+      (when file
+        (find-file file))))
 #+end_src
 ** Directories
 #+begin_src emacs-lisp
   (setq org-directory "~/.org")
   (setq org-default-notes-file "~/org/refile.org")
 #+end_src
-** Key bindings
-#+begin_src emacs-lisp
-  ;; Standard key bindings
-  (global-set-key "\C-cl" 'org-store-link)
-  (global-set-key "\C-ca" 'org-agenda)
-  (global-set-key "\C-cb" 'org-iswitchb)
 
-  ;; Org capture
-  (global-set-key (kbd "C-c c") 'org-capture)
-
-  ;; Custom Key Bindings
-  (global-set-key (kbd "<f12>") 'org-agenda)
-  (global-set-key (kbd "<f5>") 'jx-org-todo)
-  (global-set-key (kbd "<S-f5>") 'jx-widen)
-  (global-set-key (kbd "<f7>") 'jx-set-truncate-lines)
-  (global-set-key (kbd "C-<f8>") 'org-cycle-agenda-files)
-  (global-set-key (kbd "<f9> <f9>") 'jx-show-org-agenda)
-  (global-set-key (kbd "<f9> b") 'bbdb)
-  (global-set-key (kbd "<f9> c") 'calendar)
-  (global-set-key (kbd "<f9> f") 'boxquote-insert-file)
-  (global-set-key (kbd "<f9> g") 'gnus)
-  (global-set-key (kbd "<f9> h") 'jx-hide-other)
-  (global-set-key (kbd "<f9> n") 'jx-toggle-next-task-display)
-  (global-set-key (kbd "<f9> w") 'widen)
-
-  (global-set-key (kbd "<f9> I") 'jx-punch-in)
-  (global-set-key (kbd "<f9> O") 'jx-punch-out)
-
-  (global-set-key (kbd "<f9> o") 'jx-make-org-scratch)
-
-  (global-set-key (kbd "<f9> r") 'boxquote-region)
-  (global-set-key (kbd "<f9> s") 'jx-switch-to-scratch)
-
-  (global-set-key (kbd "<f9> t") 'jx-insert-inactive-timestamp)
-  (global-set-key (kbd "<f9> T") 'jx-toggle-insert-inactive-timestamp)
-
-  (global-set-key (kbd "<f9> v") 'visible-mode)
-  (global-set-key (kbd "<f9> l") 'org-toggle-link-display)
-  (global-set-key (kbd "<f9> SPC") 'jx-clock-in-last-task)
-  (global-set-key (kbd "C-<f9>") 'previous-buffer)
-  (global-set-key (kbd "M-<f9>") 'org-toggle-inline-images)
-  (global-set-key (kbd "C-x n r") 'narrow-to-region)
-  (global-set-key (kbd "C-<f10>") 'next-buffer)
-  (global-set-key (kbd "<f11>") 'org-clock-goto)
-  (global-set-key (kbd "C-<f11>") 'org-clock-in)
-  (global-set-key (kbd "C-s-<f12>") 'jx-save-then-publish)
-  (global-set-key (kbd "C-c c") 'org-capture)
-
-  ; Agenda files managment
-  (global-set-key (kbd "<f9> a s") 'jx-ido-find-agenda-file)
-
-  (defun jx-hide-other ()
-    (interactive)
-    (save-excursion
-      (org-back-to-heading 'invisible-ok)
-      (hide-other)
-      (org-cycle)
-      (org-cycle)
-      (org-cycle)))
-
-  (defun jx-set-truncate-lines ()
-    "Toggle value of truncate-lines and refresh window display."
-    (interactive)
-    (setq truncate-lines (not truncate-lines))
-    ;; now refresh window display (an idiom from simple.el):
-    (save-excursion
-      (set-window-start (selected-window)
-                        (window-start (selected-window)))))
-
-  (defun jx-make-org-scratch ()
-    (interactive)
-    (find-file "~/tmp/publish/scratch.org")
-    (gnus-make-directory "~/tmp/publish"))
-
-  (defun jx-switch-to-scratch ()
-    (interactive)
-    (switch-to-buffer "*scratch*"))
-
-#+end_src
 ** TODO Keywords
 #+begin_src emacs-lisp
-    (setq org-todo-keywords
-          '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
-            (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING")))
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
+          (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING")))
 
-    (setq org-todo-keyword-faces
-          (quote (("TODO" :foreground "red" :weight bold)
-                  ("NEXT" :foreground "blue" :weight bold)
-                  ("DONE" :foreground "forest green" :weight bold)
-                  ("WAITING" :foreground "orange" :weight bold)
-                  ("HOLD" :foreground "magenta" :weight bold)
-                  ("CANCELLED" :foreground "forest green" :weight bold)
-                  ("MEETING" :foreground "forest green" :weight bold)
-                  ("PHONE" :foreground "forest green" :weight bold))))
+  (setq org-todo-keyword-faces
+        (quote (("TODO" :foreground "red" :weight bold)
+                ("NEXT" :foreground "blue" :weight bold)
+                ("DONE" :foreground "forest green" :weight bold)
+                ("WAITING" :foreground "orange" :weight bold)
+                ("HOLD" :foreground "magenta" :weight bold)
+                ("CANCELLED" :foreground "forest green" :weight bold)
+                ("MEETING" :foreground "forest green" :weight bold)
+                ("PHONE" :foreground "forest green" :weight bold))))
 
   (setq org-use-fast-todo-selection t)
   (setq org-treat-S-cursor-todo-selection-as-state-change nil)
 #+end_src
-
 ** TODO state triggers
 #+begin_src emacs-lisp
   (setq org-todo-state-tags-triggers
@@ -306,19 +366,19 @@
   ;; Capture templates for: TODO tasks, Notes, appointments, phone calls, meetings, and org-protocol
   (setq org-capture-templates
         '(("t" "todo" entry (file "~/.org/refile.org")
-           "* TODO %?\n  %U\n  %a\n" :clock-in t :clock-resume t)
+           "* TODO %?\n  %U\n  %a\n")
           ("r" "respond" entry (file "~/.org/refile.org")
-           "* NEXT Respond to %:from on %:subject\nSCHEDULED: %t\n%U\n%a\n" :clock-in t :clock-resume t :immediate-finish t)
+           "* NEXT Respond to %:from on %:subject\nSCHEDULED: %t\n%U\n%a\n")
           ("n" "note" entry (file "~/.org/refile.org")
-           "* %? :NOTE:\n%U\n%a\n" :clock-in t :clock-resume t)
+           "* %? :NOTE:\n%U\n%a\n")
           ("j" "Journal" entry (file+datetree "~/.org/diary.org")
-           "* %?\n%U\n" :clock-in t :clock-resume t)
+           "* %?\n%U\n")
           ("w" "org-protocol" entry (file "~/.org/refile.org")
-           "* TODO Review %c\n%U\n" :immediate-finish t)
+           "* TODO Review %c\n%U\n")
           ("m" "Meeting" entry (file "~/.org/refile.org")
-           "* MEETING with %? :MEETING:\n%U" :clock-in t :clock-resume t)
+           "* MEETING with %? :MEETING:\n%U")
           ("p" "Phone call" entry (file "~/.org/refile.org")
-           "* PHONE %? :PHONE:\n%U" :clock-in t :clock-resume t)
+           "* PHONE %? :PHONE:\n%U")
           ("h" "Habit" entry (file "~/.org/refile.org")
            "* NEXT %?\n%U\n%a\nSCHEDULED: %(format-time-string \"<%Y-%m-%d %a .+1d/3d>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n")))
 #+end_src
@@ -332,11 +392,12 @@
 
   (add-hook 'org-clock-out-hook 'jx--remove-empty-drawer-on-clock-out 'append)
 #+end_src
+
 ** Refile
 #+begin_src emacs-lisp
   ; Targets include this file and any file contributing to the agenda - up to 9 levels deep
-  (setq org-refile-targets '((nil :maxlevel . 9)
-                             (org-agenda-files :maxlevel . 9)))
+  (setq org-refile-targets (quote ((nil :maxlevel . 9)
+                                   (org-agenda-files :maxlevel . 9))))
 
   ; Use full outline paths for refile targets - we file directly with IDO
   (setq org-refile-use-outline-path t)
@@ -345,13 +406,13 @@
   (setq org-outline-path-complete-in-steps nil)
 
   ; Allow refile to create parent tasks with confirmation
-  (setq org-refile-allow-creating-parent-nodes 'confirm)
+  (setq org-refile-allow-creating-parent-nodes (quote confirm))
 
   ; Use IDO for both buffer and file completion and ido-everywhere to t
   (setq org-completion-use-ido t)
   (setq ido-everywhere t)
   (setq ido-max-directory-size 100000)
-  (ido-mode 'both)
+  (ido-mode (quote both))
   ; Use the current window when visiting files and buffers with ido
   (setq ido-default-file-method 'selected-window)
   (setq ido-default-buffer-method 'selected-window)
@@ -365,467 +426,65 @@
     (not (member (nth 2 (org-heading-components)) org-done-keywords)))
 
   (setq org-refile-target-verify-function 'jx--verify-refile-target)
-#+end_src
-** Custom agenda views
+#+END_SRC
+** Key bindings
 #+begin_src emacs-lisp
-  ;; Do not dim blocked tasks
-  (setq org-agenda-dim-blocked-tasks nil)
+  (global-set-key (kbd "<f12>") 'org-agenda)
+  (global-set-key (kbd "<f8> s") 'org-save-all-org-buffers)
+  (global-set-key (kbd "<f8> <f8>") 'org-narrow-to-subtree)
+  (global-set-key (kbd "C-<f8>") 'widen)
 
-  ;; Compact the block agenda view
-  (setq org-agenda-compact-blocks t)
-
-  ;; Custom agenda command definitions
-  (setq org-agenda-custom-commands
-        '(("N" "Notes" tags "NOTE"
-           ((org-agenda-overriding-header "Notes")
-            (org-tags-match-list-sublevels t)))
-          ("h" "Habits" tags-todo "STYLE=\"habit\""
-           ((org-agenda-overriding-header "Habits")
-            (org-agenda-sorting-strategy
-             '(todo-state-down effort-up category-keep))))
-          (" " "Agenda"
-           ((agenda "" nil)
-            (tags "REFILE"
-                  ((org-agenda-overriding-header "Tasks to Refile")
-                   (org-tags-match-list-sublevels nil)))
-            (tags-todo "-CANCELLED/!"
-                       ((org-agenda-overriding-header "Stuck Projects")
-                        (org-agenda-skip-function 'jx--skip-non-stuck-projects)
-                        (org-agenda-sorting-strategy
-                         '(category-keep))))
-            (tags-todo "-HOLD-CANCELLED/!"
-                       ((org-agenda-overriding-header "Projects")
-                        (org-agenda-skip-function 'jx--skip-non-projects)
-                        (org-tags-match-list-sublevels 'indented)
-                        (org-agenda-sorting-strategy
-                         '(category-keep))))
-            (tags-todo "-CANCELLED/!NEXT"
-                       ((org-agenda-overriding-header (concat "Project Next Tasks"
-                                                              (if jx--hide-scheduled-and-waiting-next-tasks
-                                                                  ""
-                                                                " (including WAITING and SCHEDULED tasks)")))
-                        (org-agenda-skip-function 'jx--skip-projects-and-habits-and-single-tasks)
-                        (org-tags-match-list-sublevels t)
-                        (org-agenda-todo-ignore-scheduled jx--hide-scheduled-and-waiting-next-tasks)
-                        (org-agenda-todo-ignore-deadlines jx--hide-scheduled-and-waiting-next-tasks)
-                        (org-agenda-todo-ignore-with-date jx--hide-scheduled-and-waiting-next-tasks)
-                        (org-agenda-sorting-strategy
-                         '(todo-state-down effort-up category-keep))))
-            (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
-                       ((org-agenda-overriding-header (concat "Project Subtasks"
-                                                              (if jx--hide-scheduled-and-waiting-next-tasks
-                                                                  ""
-                                                                " (including WAITING and SCHEDULED tasks)")))
-                        (org-agenda-skip-function 'jx--skip-non-project-tasks)
-                        (org-agenda-todo-ignore-scheduled jx--hide-scheduled-and-waiting-next-tasks)
-                        (org-agenda-todo-ignore-deadlines jx--hide-scheduled-and-waiting-next-tasks)
-                        (org-agenda-todo-ignore-with-date jx--hide-scheduled-and-waiting-next-tasks)
-                        (org-agenda-sorting-strategy
-                         '(category-keep))))
-            (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
-                       ((org-agenda-overriding-header (concat "Standalone Tasks"
-                                                              (if jx--hide-scheduled-and-waiting-next-tasks
-                                                                  ""
-                                                                " (including WAITING and SCHEDULED tasks)")))
-                        (org-agenda-skip-function 'jx--skip-project-tasks)
-                        (org-agenda-todo-ignore-scheduled jx--hide-scheduled-and-waiting-next-tasks)
-                        (org-agenda-todo-ignore-deadlines jx--hide-scheduled-and-waiting-next-tasks)
-                        (org-agenda-todo-ignore-with-date jx--hide-scheduled-and-waiting-next-tasks)
-                        (org-agenda-sorting-strategy
-                         '(category-keep))))
-            (tags-todo "-CANCELLED+WAITING|HOLD/!"
-                       ((org-agenda-overriding-header (concat "Waiting and Postponed Tasks"
-                                                              (if jx--hide-scheduled-and-waiting-next-tasks
-                                                                  ""
-                                                                " (including WAITING and SCHEDULED tasks)")))
-                        (org-agenda-skip-function 'jx--skip-non-tasks)
-                        (org-tags-match-list-sublevels nil)
-                        (org-agenda-todo-ignore-scheduled jx--hide-scheduled-and-waiting-next-tasks)
-                        (org-agenda-todo-ignore-deadlines jx--hide-scheduled-and-waiting-next-tasks)))
-            (tags "-REFILE/"
-                  ((org-agenda-overriding-header "Tasks to Archive")
-                   (org-agenda-skip-function 'jx--skip-non-archivable-tasks)
-                   (org-tags-match-list-sublevels nil))))
-           nil)))
+  ;; Org capture
+  (global-set-key (kbd "C-c c") 'org-capture)
 #+end_src
-** Clock setup
+* Misc
 #+begin_src emacs-lisp
-  ;;
-  ;; Resume clocking task when emacs is restarted
-  (org-clock-persistence-insinuate)
-  ;;
-  ;; Show lot of clocking history so it's easy to pick items off the C-F11 list
-  (setq org-clock-history-length 23)
-  ;; Resume clocking task on clock-in if the clock is open
-  (setq org-clock-in-resume t)
-  ;; Change tasks to NEXT when clocking in
-  (setq org-clock-in-switch-to-state 'jx--clock-in-to-next)
-  ;; Separate drawers for clocking and logs
-  (setq org-drawers (quote ("PROPERTIES" "LOGBOOK")))
-  ;; Save clock data and state changes and notes in the LOGBOOK drawer
-  (setq org-clock-into-drawer t)
-  ;; Sometimes I change tasks I'm clocking quickly - this removes clocked tasks with 0:00 duration
-  (setq org-clock-out-remove-zero-time-clocks t)
-  ;; Clock out when moving task to a done state
-  (setq org-clock-out-when-done t)
-  ;; Save the running clock and all clock history when exiting Emacs, load it on startup
-  (setq org-clock-persist t)
-  ;; Do not prompt to resume an active clock
-  (setq org-clock-persist-query-resume nil)
-  ;; Enable auto clock resolution for finding open clocks
-  (setq org-clock-auto-clock-resolution (quote when-no-clock-is-running))
-  ;; Include current clocking task in clock reports
-  (setq org-clock-report-include-clocking-task t)
+  (setq next-line-add-newlines t)
+  (visible-mark-mode 1)
+  (global-set-key (kbd "M-i") 'imenu-anywhere)
+#+END_SRC
 
-  (setq jx--keep-clock-running nil)
-
-  (defun jx--clock-in-to-next (kw)
-    "Switch a task from TODO to NEXT when clocking in.
-  Skips capture tasks, projects, and subprojects.
-  Switch projects and subprojects from NEXT back to TODO"
-    (when (not (and (boundp 'org-capture-mode) org-capture-mode))
-      (cond
-       ((and (member (org-get-todo-state) (list "TODO"))
-             (jx--is-task-p))
-        "NEXT")
-       ((and (member (org-get-todo-state) (list "NEXT"))
-             (jx--is-project-p))
-        "TODO"))))
-
-  (defun jx--find-project-task ()
-    "Move point to the parent (project) task if any"
-    (save-restriction
-      (widen)
-      (let ((parent-task (save-excursion (org-back-to-heading 'invisible-ok) (point))))
-        (while (org-up-heading-safe)
-          (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
-            (setq parent-task (point))))
-        (goto-char parent-task)
-        parent-task)))
-
-  (defun jx--punch-in (arg)
-    "Start continuous clocking and set the default task to the
-  selected task.  If no task is selected set the Organization task
-  as the default task."
-    (interactive "p")
-    (setq jx--keep-clock-running t)
-    (if (equal major-mode 'org-agenda-mode)
-        ;;
-        ;; We're in the agenda
-        ;;
-        (let* ((marker (org-get-at-bol 'org-hd-marker))
-               (tags (org-with-point-at marker (org-get-tags-at))))
-          (if (and (eq arg 4) tags)
-              (org-agenda-clock-in '(16))
-            (jx--clock-in-organization-task-as-default)))
-      ;;
-      ;; We are not in the agenda
-      ;;
-      (save-restriction
-        (widen)
-        ; Find the tags on the current task
-        (if (and (equal major-mode 'org-mode) (not (org-before-first-heading-p)) (eq arg 4))
-            (org-clock-in '(16))
-          (jx--clock-in-organization-task-as-default)))))
-
-  (defun jx--punch-out ()
-    (interactive)
-    (setq jx--keep-clock-running nil)
-    (when (org-clock-is-active)
-      (org-clock-out))
-    (org-agenda-remove-restriction-lock))
-
-  (defun jx--clock-in-default-task ()
-    (save-excursion
-      (org-with-point-at org-clock-default-task
-        (org-clock-in))))
-
-  (defun jx--clock-in-parent-task ()
-    "Move point to the parent (project) task if any and clock in"
-    (let ((parent-task))
-      (save-excursion
-        (save-restriction
-          (widen)
-          (while (and (not parent-task) (org-up-heading-safe))
-            (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
-              (setq parent-task (point))))
-          (if parent-task
-              (org-with-point-at parent-task
-                (org-clock-in))
-            (when jx--keep-clock-running
-              (jx--clock-in-default-task)))))))
-
-  (defvar jx--organization-task-id "eb155a82-92b2-4f25-a3c6-0304591af2f9")
-
-  (defun jx--clock-in-organization-task-as-default ()
-    (interactive)
-    (org-with-point-at (org-id-find jx--organization-task-id 'marker)
-      (org-clock-in '(16))))
-
-  (defun jx--clock-out-maybe ()
-    (when (and jx--keep-clock-running
-               (not org-clock-clocking-in)
-               (marker-buffer org-clock-default-task)
-               (not org-clock-resolving-clocks-due-to-idleness))
-      (jx--clock-in-parent-task)))
-
-  (add-hook 'org-clock-out-hook 'jx--clock-out-maybe 'append)
-#+end_src
-** GTD Stuff
 #+begin_src emacs-lisp
-  (defun jx--is-project-p ()
-    "Any task with a todo keyword subtask"
-    (save-restriction
-      (widen)
-      (let ((has-subtask)
-            (subtree-end (save-excursion (org-end-of-subtree t)))
-            (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
-        (save-excursion
-          (forward-line 1)
-          (while (and (not has-subtask)
-                      (< (point) subtree-end)
-                      (re-search-forward "^\*+ " subtree-end t))
-            (when (member (org-get-todo-state) org-todo-keywords-1)
-              (setq has-subtask t))))
-        (and is-a-task has-subtask))))
+  (mapcar 
+    (lambda (s) (put s 'racket-indent-function 'defun))
+   '(arguments))
 
-  (defun jx--is-project-subtree-p ()
-    "Any task with a todo keyword that is in a project subtree.
-  Callers of this function already widen the buffer view."
-    (let ((task (save-excursion (org-back-to-heading 'invisible-ok)
-                                (point))))
-      (save-excursion
-        (jx--find-project-task)
-        (if (equal (point) task)
-            nil
-          t))))
+  (mapcar 
+   (lambda (s) (put s 'racket-indent-function 2))
+   '(parameterize-from-config struct))
 
-  (defun jx--is-task-p ()
-    "Any task with a todo keyword and no subtask"
-    (save-restriction
-      (widen)
-      (let ((has-subtask)
-            (subtree-end (save-excursion (org-end-of-subtree t)))
-            (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
-        (save-excursion
-          (forward-line 1)
-          (while (and (not has-subtask)
-                      (< (point) subtree-end)
-                      (re-search-forward "^\*+ " subtree-end t))
-            (when (member (org-get-todo-state) org-todo-keywords-1)
-              (setq has-subtask t))))
-        (and is-a-task (not has-subtask)))))
-
-  (defun jx--is-subproject-p ()
-    "Any task which is a subtask of another project"
-    (let ((is-subproject)
-          (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
-      (save-excursion
-        (while (and (not is-subproject) (org-up-heading-safe))
-          (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
-            (setq is-subproject t))))
-      (and is-a-task is-subproject)))
-
-  (defun jx--list-sublevels-for-projects-indented ()
-    "Set org-tags-match-list-sublevels so when restricted to a subtree we list all subtasks.
-    This is normally used by skipping functions where this variable is already local to the agenda."
-    (if (marker-buffer org-agenda-restrict-begin)
-        (setq org-tags-match-list-sublevels 'indented)
-      (setq org-tags-match-list-sublevels nil))
-    nil)
-
-  (defun jx--list-sublevels-for-projects ()
-    "Set org-tags-match-list-sublevels so when restricted to a subtree we list all subtasks.
-    This is normally used by skipping functions where this variable is already local to the agenda."
-    (if (marker-buffer org-agenda-restrict-begin)
-        (setq org-tags-match-list-sublevels t)
-      (setq org-tags-match-list-sublevels nil))
-    nil)
-
-  (defvar jx--hide-scheduled-and-waiting-next-tasks t)
-
-  (defun jx--toggle-next-task-display ()
-    (interactive)
-    (setq jx--hide-scheduled-and-waiting-next-tasks (not jx--hide-scheduled-and-waiting-next-tasks))
-    (when  (equal major-mode 'org-agenda-mode)
-      (org-agenda-redo))
-    (message "%s WAITING and SCHEDULED NEXT Tasks" (if jx--hide-scheduled-and-waiting-next-tasks "Hide" "Show")))
-
-  (defun jx--skip-stuck-projects ()
-    "Skip trees that are not stuck projects"
-    (save-restriction
-      (widen)
-      (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
-        (if (jx--is-project-p)
-            (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
-                   (has-next ))
-              (save-excursion
-                (forward-line 1)
-                (while (and (not has-next) (< (point) subtree-end) (re-search-forward "^\\*+ NEXT " subtree-end t))
-                  (unless (member "WAITING" (org-get-tags-at))
-                    (setq has-next t))))
-              (if has-next
-                  nil
-                next-headline)) ; a stuck project, has subtasks but no next task
-          nil))))
-
-  (defun jx--skip-non-stuck-projects ()
-    "Skip trees that are not stuck projects"
-    ;; (jx--list-sublevels-for-projects-indented)
-    (save-restriction
-      (widen)
-      (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
-        (if (jx--is-project-p)
-            (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
-                   (has-next ))
-              (save-excursion
-                (forward-line 1)
-                (while (and (not has-next) (< (point) subtree-end) (re-search-forward "^\\*+ NEXT " subtree-end t))
-                  (unless (member "WAITING" (org-get-tags-at))
-                    (setq has-next t))))
-              (if has-next
-                  next-headline
-                nil)) ; a stuck project, has subtasks but no next task
-          next-headline))))
-
-  (defun jx--skip-non-projects ()
-    "Skip trees that are not projects"
-    ;; (jx--list-sublevels-for-projects-indented)
-    (if (save-excursion (jx--skip-non-stuck-projects))
-        (save-restriction
-          (widen)
-          (let ((subtree-end (save-excursion (org-end-of-subtree t))))
-            (cond
-             ((jx--is-project-p)
-              nil)
-             ((and (jx--is-project-subtree-p) (not (jx--is-task-p)))
-              nil)
-             (t
-              subtree-end))))
-      (save-excursion (org-end-of-subtree t))))
-
-  (defun jx--skip-project-trees-and-habits ()
-    "Skip trees that are projects"
-    (save-restriction
-      (widen)
-      (let ((subtree-end (save-excursion (org-end-of-subtree t))))
-        (cond
-         ((jx--is-project-p)
-          subtree-end)
-         ((org-is-habit-p)
-          subtree-end)
-         (t
-          nil)))))
-
-  (defun jx--skip-projects-and-habits-and-single-tasks ()
-    "Skip trees that are projects, tasks that are habits, single non-project tasks"
-    (save-restriction
-      (widen)
-      (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
-        (cond
-         ((org-is-habit-p)
-          next-headline)
-         ((and jx--hide-scheduled-and-waiting-next-tasks
-               (member "WAITING" (org-get-tags-at)))
-          next-headline)
-         ((jx--is-project-p)
-          next-headline)
-         ((and (jx--is-task-p) (not (jx--is-project-subtree-p)))
-          next-headline)
-         (t
-          nil)))))
-
-  (defun jx--skip-project-tasks-maybe ()
-    "Show tasks related to the current restriction.
-  When restricted to a project, skip project and sub project tasks, habits, NEXT tasks, and loose tasks.
-  When not restricted, skip project and sub-project tasks, habits, and project related tasks."
-    (save-restriction
-      (widen)
-      (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
-             (next-headline (save-excursion (or (outline-next-heading) (point-max))))
-             (limit-to-project (marker-buffer org-agenda-restrict-begin)))
-        (cond
-         ((jx--is-project-p)
-          next-headline)
-         ((org-is-habit-p)
-          subtree-end)
-         ((and (not limit-to-project)
-               (jx--is-project-subtree-p))
-          subtree-end)
-         ((and limit-to-project
-               (jx--is-project-subtree-p)
-               (member (org-get-todo-state) (list "NEXT")))
-          subtree-end)
-         (t
-          nil)))))
-
-  (defun jx--skip-project-tasks ()
-    "Show non-project tasks.
-  Skip project and sub-project tasks, habits, and project related tasks."
-    (save-restriction
-      (widen)
-      (let* ((subtree-end (save-excursion (org-end-of-subtree t))))
-        (cond
-         ((jx--is-project-p)
-          subtree-end)
-         ((org-is-habit-p)
-          subtree-end)
-         ((jx--is-project-subtree-p)
-          subtree-end)
-         (t
-          nil)))))
-
-  (defun jx--skip-non-project-tasks ()
-    "Show project tasks.
-  Skip project and sub-project tasks, habits, and loose non-project tasks."
-    (save-restriction
-      (widen)
-      (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
-             (next-headline (save-excursion (or (outline-next-heading) (point-max)))))
-        (cond
-         ((jx--is-project-p)
-          next-headline)
-         ((org-is-habit-p)
-          subtree-end)
-         ((and (jx--is-project-subtree-p)
-               (member (org-get-todo-state) (list "NEXT")))
-          subtree-end)
-         ((not (jx--is-project-subtree-p))
-          subtree-end)
-         (t
-          nil)))))
-
-  (defun jx--skip-projects-and-habits ()
-    "Skip trees that are projects and tasks that are habits"
-    (save-restriction
-      (widen)
-      (let ((subtree-end (save-excursion (org-end-of-subtree t))))
-        (cond
-         ((jx--is-project-p)
-          subtree-end)
-         ((org-is-habit-p)
-          subtree-end)
-         (t
-          nil)))))
-
-  (defun jx--skip-non-subprojects ()
-    "Skip trees that are not projects"
-    (let ((next-headline (save-excursion (outline-next-heading))))
-      (if (jx--is-subproject-p)
-          nil
-        next-headline)))
-#+end_src
-** IDO
+#+end_SRC
+* General key bindings
 #+begin_src emacs-lisp
-  (defun jx-ido-find-agenda-file (full-path)
-    (interactive "P")
-    (let ((file (jx--completing-read-file "Agenda file: " (org-agenda-files t 'ifmode) full-path)))
-      (when file
-        (find-file file))))
+  (global-set-key (kbd "<f5>") (lambda () (interactive) (revert-buffer 'ignore-auto 'noconfirm)))
+  (global-set-key (kbd "C-<f5>") (lambda () (interactive) (revert-buffer-with-coding-system 'utf-8 'force)))
+
+  (global-set-key (kbd "<f1>") 'menu-bar-mode)
+
+  (global-set-key (kbd "<f8> x e")
+    (lambda () 
+      (interactive)
+      (find-file (emacstuff-file "emacstuff.org"))))
+
+  (global-set-key (kbd "<f8> x x")
+    (lambda () 
+      (interactive)
+      (kill-buffer "emacstuff.org")))
+
+  (global-set-key (kbd "<f9> s")
+    (lambda ()
+      (interactive)
+      (switch-to-buffer "*scratch*")))
 #+end_src
-* specifics
+* Specific settings
 #+begin_src emacs-lisp
   (defvar emacstuff--user-settings-file (emacstuff-file (concat (user-login-name) ".org")))
   (when (file-exists-p emacstuff--user-settings-file)
     (org-babel-load-file emacstuff--user-settings-file))
 #+end_src
+
+
+
+
+
+
