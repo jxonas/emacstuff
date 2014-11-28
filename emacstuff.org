@@ -191,6 +191,15 @@
   (require 'expand-region)
   (global-set-key (kbd "C-=") 'er/expand-region)
 #+end_src
+* Vendor directory
+#+begin_src emacs-lisp
+  (defvar emacstuff-vendor-dir (expand-file-name "vendor" emacstuff-dir))
+  (add-to-list 'load-path emacstuff-vendor-dir)
+
+  (dolist (project (directory-files emacstuff-vendor-dir t "\\w+"))
+    (when (file-directory-p project)
+      (add-to-list 'load-path project)))
+#+end_src
 * Occur
 #+begin_src emacs-lisp
   (eval-when-compile
@@ -454,14 +463,17 @@
 #+END_SRC
 
 #+begin_src emacs-lisp
-  (mapcar 
+  (setq echo-keystrokes 0.1
+        use-dialog-box nil
+        visible-bell t)
+
+  (mapcar
     (lambda (s) (put s 'racket-indent-function 'defun))
    '(arguments))
 
-  (mapcar 
+  (mapcar
    (lambda (s) (put s 'racket-indent-function 2))
    '(parameterize-from-config struct))
-
 #+end_SRC
 * Indentation and buffer cleanup
 #+begin_src emacs-lisp
