@@ -3,8 +3,11 @@
 * Basic configuration
 ** Custom.el
 #+begin_src emacs-lisp
-  (setq custom-file (emacstuff-file "custom.el"))
-  (load custom-file)
+  (setq emacstuff-custom-file (emacstuff-file "custom.el"))
+
+  (when (file-exists-p emacstuff-custom-file)
+    (setq custom-file emacstuff-custom-file)
+    (load custom-file))
 #+end_src
 ** Base directory
 #+begin_src emacs-lisp
@@ -201,11 +204,12 @@
 * Vendor directory
 #+begin_src emacs-lisp
   (defvar emacstuff-vendor-dir (expand-file-name "vendor" emacstuff-dir))
-  (add-to-list 'load-path emacstuff-vendor-dir)
 
-  (dolist (project (directory-files emacstuff-vendor-dir t "\\w+"))
-    (when (file-directory-p project)
-      (add-to-list 'load-path project)))
+  (when (file-exists-p emacstuff-vendor-dir)
+    (add-to-list 'load-path emacstuff-vendor-dir)
+    (dolist (project (directory-files emacstuff-vendor-dir t "\\w+"))
+      (when (file-directory-p project)
+        (add-to-list 'load-path project))))
 #+end_src
 * Occur
 #+begin_src emacs-lisp
@@ -301,6 +305,7 @@
 #+end_src
 * Deft
 #+begin_src emacs-lisp
+  (setq deft-directory "~/Dropbox/deft")
   (setq deft-use-filename-as-title t)
   (setq deft-extension "org")
   (setq deft-text-mode 'org-mode)
