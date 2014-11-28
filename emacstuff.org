@@ -44,7 +44,7 @@
   (show-paren-mode 1)
   (tool-bar-mode -1)
   (menu-bar-mode -1)
-
+  (setq column-number-mode t)
   (tooltip-mode -1)
   (setq tooltip-use-echo-area t)
 
@@ -106,16 +106,17 @@
         '(("gnu" . "http://elpa.gnu.org/packages/")
           ("marmalade" . "http://marmalade-repo.org/packages/")
           ("melpa" . "http://melpa.milkbox.net/packages/")))
-    
+
   (package-initialize)
-    
+
   (defvar emacstuff-packages
-    '(paredit 
-      highlight-parentheses 
-      multiple-cursors 
-      expand-region 
+    '(paredit
+      highlight-parentheses
+      multiple-cursors
+      expand-region
       boxquote
       smex
+      deft
       imenu-anywhere
       visible-mark
       magit
@@ -129,7 +130,7 @@
       rainbow-delimiters
      )
     "Libraries that should be installed by default.")
-    
+
   (unless package-archive-contents
     (package-refresh-contents))
 
@@ -241,6 +242,8 @@
   (setq ido-everywhere t)
   (setq ido-max-directory-size 100000)
   (ido-mode 'both)
+  (setq ido-enable-flex-matching t
+        ido-use-virtual-buffers t)
   (setq ido-default-file-method 'selected-window)
   (setq ido-default-buffer-method 'selected-window)
 
@@ -289,6 +292,13 @@
     (or (and full-path (ido-completing-read prompt files nil t))
         (jx--completing-read-file/short-path prompt files)))
 
+#+end_src
+* Deft
+#+begin_src emacs-lisp
+  (setq deft-use-filename-as-title t)
+  (setq deft-extension "org")
+  (setq deft-text-mode 'org-mode)
+  (global-set-key (kbd "<f7>") 'deft)
 #+end_src
 * Racket mode
 #+begin_src emacs-lisp
