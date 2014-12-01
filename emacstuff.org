@@ -113,26 +113,23 @@
   (package-initialize)
 
   (defvar emacstuff-packages
-    '(paredit
-      highlight-parentheses
-      multiple-cursors
-      expand-region
+    '(auto-complete
       boxquote
-      auto-complete
-      smex
       deft
-      imenu-anywhere
-      visible-mark
-      magit
-      pretty-lambdada
-      ;color-theme
-      ;zenburn-theme
-      iedit
-      ;geiser
+      expand-region
+      highlight-parentheses
       ido-ubiquitous
+      iedit
+      imenu-anywhere
+      magit
+      markdown-mode
+      multiple-cursors
+      paredit
+      pretty-lambdada
       racket-mode
       rainbow-delimiters
-     )
+      smex
+      visible-mark)
     "Libraries that should be installed by default.")
 
   (unless package-archive-contents
@@ -176,6 +173,14 @@
 #+begin_src emacs-lisp
   (require 'auto-complete-config)
   (ac-config-default)
+#+end_src
+** Markdown-mode
+#+begin_src emacs-lisp
+  (autoload 'markdown-mode "markdown-mode"
+     "Major mode for editing Markdown files" t)
+  (add-to-list 'auto-mode-alist '("\\.text\\'" . markdown-mode))
+  (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
+  (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
 #+end_src
 ** Multiple cursors
 #+begin_src emacs-lisp
