@@ -433,10 +433,12 @@
             (tags "new"
                   ((org-agenda-overriding-header "New Backlog Items")
                    (org-tags-match-list-sublevels nil)
-                   (org-agenda-skip-function '(jx--org-agenda-skip-tags "REFILE"))))
+                   (org-agenda-skip-function '(jx--org-agenda-skip-tags "REFILE"))
+                   (org-agenda-hide-tags-regexp "new")))
             (todo "WAITING"
                   ((org-agenda-overriding-header "Waiting...")
-                   (org-agenda-skip-function '(jx--org-agenda-skip-tags "new" "REFILE"))))
+                   (org-agenda-skip-function '(jx--org-agenda-skip-tags "new" "REFILE"))
+                   (org-agenda-hide-tags-regexp "WAITING")))
             (tags "REFILE"
                   ((org-agenda-overriding-header "Tasks to Refile")
                    (org-tags-match-list-sublevels nil)))
