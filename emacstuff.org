@@ -341,7 +341,7 @@
 #+begin_src emacs-lisp
   (require 'racket-mode)
 
-  (global-set-key (kbd "<f9> r") 
+  (global-set-key (kbd "<f9> r")
                   (lambda ()
                     (interactive)
                     (find-file (jx--sandbox-file "sandbox.rkt"))))
@@ -373,7 +373,15 @@
         (goto-char (racket-repl--last-prompt-end)))
       (recenter t)))
 
+  (defun racket-clear-repl-buffer ()
+    (interactive)
+    (when (boundp 'racket--repl-buffer-name)
+      (jx--save-excursion
+       (switch-to-buffer racket--repl-buffer-name)
+       (racket-repl-clear-buffer))))
+
   (define-key racket-repl-mode-map "\C-c\M-o" 'racket-repl-clear-buffer)
+  (define-key racket-mode-map "\C-c\M-o" 'racket-clear-repl-buffer)
 #+END_SRC
 * Org-mode
 ** Agenda
