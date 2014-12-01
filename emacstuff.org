@@ -592,6 +592,51 @@
 
   (setq org-refile-target-verify-function 'jx--verify-refile-target)
 #+END_SRC
+** Skeletons
+#+begin_src emacs-lisp
+  ;; Enable abbrev-mode
+  (add-hook 'org-mode-hook (lambda () (abbrev-mode 1)))
+
+  ;; Skeletons
+  ;;
+  ;; sblk - Generic block #+begin_FOO .. #+end_FOO
+  (define-skeleton skel-org-block
+    "Insert an org block, querying for type."
+    "Type: "
+    "#+begin_" str "\n"
+    _ - \n
+    "#+end_" str "\n")
+
+  (define-abbrev org-mode-abbrev-table "sblk" "" 'skel-org-block)
+
+  ;; selisp - Emacs Lisp source block
+  (define-skeleton skel-org-block-elisp
+    "Insert a org emacs-lisp block"
+    ""
+    "#+begin_src emacs-lisp\n"
+    _ - \n
+    "#+end_src\n")
+
+  (define-abbrev org-mode-abbrev-table "selisp" "" 'skel-org-block-elisp)
+#+end_src
+** Structure
+#+begin_src emacs-lisp
+  (setq org-structure-template-alist
+        '(("s" "#+begin_src ?\n\n#+end_src")
+          ("e" "#+begin_example\n?\n#+end_example")
+          ("q" "#+begin_quote\n?\n#+end_quote")
+          ("v" "#+begin_verse\n?\n#+end_verse")
+          ("v" "#+begin_verbatim\n?\n#+end_verbatim")
+          ("c" "#+begin_center\n?\n#+end_center")
+          ("l" "#+begin_latex\n?\n#+end_latex")
+          ("l" "#+latex: ")
+          ("h" "#+begin_html\n?\n#+end_html")
+          ("h" "#+html: ")
+          ("a" "#+begin_ascii\n?\n#+end_ascii")
+          ("a" "#+ascii: ")
+          ("i" "#+index: ?")
+          ("i" "#+include: %file ?")))
+#+end_src
 ** Key bindings
 #+begin_src emacs-lisp
   (global-set-key (kbd "<f12>") 'org-agenda)
