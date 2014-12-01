@@ -433,7 +433,7 @@
             (tags "new"
                   ((org-agenda-overriding-header "New Backlog Items")
                    (org-tags-match-list-sublevels nil)
-                   ;(org-agenda-skip-function '(jx--org-agenda-skip-tags "REFILE"))
+                                          ;(org-agenda-skip-function '(jx--org-agenda-skip-tags "REFILE"))
                    (org-agenda-hide-tags-regexp "new")))
             (todo "WAITING"
                   ((org-agenda-overriding-header "Waiting...")
@@ -481,6 +481,14 @@
                     nil))  ; available to archive
               (or subtree-end (point-max)))
           next-headline))))
+
+  (defun jx--org-auto-exclude-function (tag)
+    "Automatic task exclusion in the agenda with / RET"
+    (and (cond
+          ((string= tag "hold") t))
+         (concat "-" tag)))
+
+  (setq org-agenda-auto-exclude-function 'jx--org-auto-exclude-function)
 #+end_src
 ** Directories
 #+begin_src emacs-lisp
