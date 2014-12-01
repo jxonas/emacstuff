@@ -425,17 +425,18 @@
           (" " "Agenda"
            (;(agenda "Cockpit" nil)
             (todo "NEXT"
-                  ((org-agenda-overriding-header "In Progress"))
-                  (org-agenda-skip-function '(jx--org-agenda-skip-tag "new")))
+                  ((org-agenda-overriding-header "In Progress")
+                   (org-agenda-skip-function '(jx--org-agenda-skip-tags "new" "REFILE"))))
             (todo "TODO"
                   ((org-agenda-overriding-header "Backlog")
-                   (org-agenda-skip-function '(jx--org-agenda-skip-tag "new"))))
+                   (org-agenda-skip-function '(jx--org-agenda-skip-tags "new" "REFILE"))))
             (tags "new"
                   ((org-agenda-overriding-header "New Backlog Items")
-                   (org-tags-match-list-sublevels nil)))
+                   (org-tags-match-list-sublevels nil)
+                   (org-agenda-skip-function '(jx--org-agenda-skip-tags "REFILE"))))
             (todo "WAITING"
-                  ((org-agenda-overriding-header "Waiting..."))
-                  (org-agenda-skip-function '(jx--org-agenda-skip-tag "new")))
+                  ((org-agenda-overriding-header "Waiting...")
+                   (org-agenda-skip-function '(jx--org-agenda-skip-tags "new" "REFILE"))))
             (tags "REFILE"
                   ((org-agenda-overriding-header "Tasks to Refile")
                    (org-tags-match-list-sublevels nil)))
@@ -445,19 +446,12 @@
                    (org-tags-match-list-sublevels nil))))
            nil)))
 
-  (defun jx--org-agenda-skip-tag (tag &optional others)
-    "Skip all entries that correspond to TAG. If OTHERS is true, skip all entries that do not correspond to TAG."
-    (let ((next-headline (save-excursion (or (outline-next-heading) (point-max))))
-          (current-headline (or (and (org-at-heading-p)
-                                     (point))
-                                (save-excursion (org-back-to-heading)))))
-      (if others
-          (if (not (member tag (org-get-tags-at current-headline)))
-              next-headline
-            nil)
-        (if (member tag (org-get-tags-at current-headline))
-            next-headline
-          nil))))
+  (defun jx--org-agenda-skip-tags (&rest tags)
+    "Skip entry that contains at least one tag in tags"
+    (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
+      (if (intersection tags (org-get-tags-at) :test #'string-equal)
+          next-headline
+        nil)))
 
   (defun jx--skip-non-archivable-tasks ()
     "Skip trees that are not available for archiving"
