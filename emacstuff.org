@@ -92,6 +92,20 @@
 
   (setq delete-by-moving-to-trash t)
 #+end_src
+* Utilities
+#+begin_src emacs-lisp
+  (defmacro jx--save-excursion (&rest forms)
+    (let ((oldp (gensym))
+          (oldbuff (gensym))
+          (retval (gensym)))
+      `(let* ((,oldp (point))
+              (,oldbuff (current-buffer))
+              (,retval (progn ,@forms)))
+         (unless (eq (current-buffer) ,oldbuff)
+           (switch-to-buffer ,oldbuff))
+         (goto-char ,oldp)
+         ,retval)))
+#+end_src
 * Eldoc
 #+begin_src emacs-lisp
   (require 'eldoc)
