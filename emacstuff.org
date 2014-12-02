@@ -764,6 +764,8 @@
   (global-set-key (kbd "C--") 'text-scale-decrease)
 
   (global-set-key (kbd "C-x g") 'magit-status)
+
+  (global-set-key (kbd "<f9> g") 'gnus)
 #+end_src
 * Specific settings
 #+begin_src emacs-lisp
