@@ -655,6 +655,15 @@
 * Encryption
 #+begin_src emacs-lisp
   (require 'epa-file)
+
+  (defun jx-insert-encrypt-to-line ()
+    (interactive)
+    (insert
+     (concat ";; -*- epa-file-encrypt-to: (\""
+             user-mail-address
+             "\") -*-")))
+
+  (global-set-key (kbd "C-x x") 'jx-insert-encrypt-to-line)
 #+end_src
 * Misc
 #+begin_src emacs-lisp
