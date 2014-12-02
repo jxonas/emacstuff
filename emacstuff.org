@@ -1,5 +1,10 @@
 #+SEQ_TODO: FIXME FIXED
 
+* Secret
+#+begin_src emacs-lisp
+  (when (file-exists-p (emacstuff-file "secret.el"))
+    (load-file (emacstuff-file "secret.el")))
+#+end_src
 * Basic configuration
 ** Custom.el
 #+begin_src emacs-lisp
