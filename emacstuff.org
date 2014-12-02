@@ -277,9 +277,9 @@
   (setq ido-default-buffer-method 'selected-window)
 
   (defun jx--prepare-files-for-ido (files)
-    (labels ((make (file)
+    (cl-labels ((make (file)
                    (cons file
-                         (nreverse 
+                         (nreverse
                           (split-string (expand-file-name file) "/"))))
              (file (x) (car x))
              (head (x) (cadr x))
