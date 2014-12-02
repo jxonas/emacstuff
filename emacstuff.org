@@ -326,16 +326,16 @@
 #+begin_src emacs-lisp
   (defvar jx--deft-dir "~/Dropbox/deft/")
 
-  (defun jx--deft (extension mode)
-    (setq deft-directory (expand-file-name extension jx--deft-dir))
+  (defun jx--deft (dir extension mode)
+    (setq deft-directory (expand-file-name dir jx--deft-dir))
     (setq deft-use-filename-as-title t)
     (setq deft-extension extension)
     (setq deft-text-mode mode)
     (deft)
     (deft-refresh))
 
-  (global-set-key (kbd "<f7>") (lambda () (interactive) (jx--deft "org" 'org-mode)))
-  (global-set-key (kbd "C-<f7>") (lambda () (interactive) (jx--deft "md" 'markdown-mode)))
+  (global-set-key (kbd "<f7>") (lambda () (interactive) (jx--deft "org" "gpg" 'org-mode)))
+  (global-set-key (kbd "C-<f7>") (lambda () (interactive) (jx--deft "md" "gpg" 'markdown-mode)))
 #+end_src
 * Racket mode
 #+begin_src emacs-lisp
@@ -646,6 +646,10 @@
 
   ;; Org capture
   (global-set-key (kbd "C-c c") 'org-capture)
+#+end_src
+* Encryption
+#+begin_src emacs-lisp
+  (require 'epa-file)
 #+end_src
 * Misc
 #+begin_src emacs-lisp
