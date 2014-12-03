@@ -136,6 +136,7 @@
       boxquote
       deft
       expand-region
+      flx-ido
       highlight-parentheses
       ido-ubiquitous
       iedit
@@ -145,6 +146,7 @@
       multiple-cursors
       paredit
       pretty-lambdada
+      projectile
       racket-mode
       rainbow-delimiters
       smex
@@ -268,12 +270,15 @@
     (ido-mode t)
     (setq ido-enable-prefix nil
           ido-enable-flex-matching t
+          ido-use-faces nil
           ido-create-new-buffer 'always
           ido-use-filename-at-point t
           ido-max-prospects 10))
 
+  (require 'flx-ido)
 
   (setq ido-everywhere t)
+  (flx-ido-mode 1)
   (setq ido-max-directory-size 100000)
   (ido-mode 'both)
   (setq ido-enable-flex-matching t
@@ -283,25 +288,25 @@
 
   (defun jx--prepare-files-for-ido (files)
     (cl-labels ((make (file)
-                   (cons file
-                         (nreverse
-                          (split-string (expand-file-name file) "/"))))
-             (file (x) (car x))
-             (head (x) (cadr x))
-             (tail (x) (cddr x))
-             (pop-head (x)
-                       (let ((tail (tail x)))
-                         (setf (cdr x) tail))
-                       x))
+                      (cons file
+                            (nreverse
+                             (split-string (expand-file-name file) "/"))))
+                (file (x) (car x))
+                (head (x) (cadr x))
+                (tail (x) (cddr x))
+                (pop-head (x)
+                          (let ((tail (tail x)))
+                            (setf (cdr x) tail))
+                          x))
       (let ((xs (mapcar #'make files))
             (table (make-hash-table :test #'equal))
             (final nil))
         (dolist (x xs)
           (let ((key (head x)))
             (push (pop-head x) (gethash key table))))
-        (loop 
+        (loop
          while (> (hash-table-count table) 0)
-         do 
+         do
          (maphash (lambda (key value)
                     (when (= (length value) 1)
                       (let ((x (first value)))
@@ -321,11 +326,19 @@
            (selection (ido-completing-read prompt option-list nil t)))
       (when selection
         (cdr (assoc selection options)))))
-    
+
   (defun jx--completing-read-file (prompt files &optional full-path)
     (or (and full-path (ido-completing-read prompt files nil t))
         (jx--completing-read-file/short-path prompt files)))
 
+#+end_src
+* Projectile
+#+begin_src emacs-lisp
+  (projectile-global-mode)
+  (setq projectile-indexing-method
+        (case system-type
+          (windows-nt 'alien)
+          (t 'native)))
 #+end_src
 * Deft
 #+begin_src emacs-lisp
