@@ -354,7 +354,7 @@
 #+begin_src emacs-lisp
   (setq deft-auto-save-interval 0)
 
-  (defvar jx--deft-dir "~/Dropbox/deft/")
+  (defvar jx--deft-dir "~/Dropbox/Pessoal/deft/")
 
   (defun jx--deft (dir extension mode)
     (setq deft-directory (expand-file-name dir jx--deft-dir))
