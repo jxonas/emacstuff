@@ -10,9 +10,12 @@
 #+begin_src emacs-lisp
   (setq emacstuff-custom-file (emacstuff-file "custom.el"))
 
-  (when (file-exists-p emacstuff-custom-file)
-    (setq custom-file emacstuff-custom-file)
-    (load custom-file))
+  ;; create file custom.el if it does not exist
+  (unless (file-exists-p emacstuff-custom-file)
+    (with-temp-buffer (write-file (emacstuff-file "custom.el"))))
+
+  (setq custom-file emacstuff-custom-file)
+  (load custom-file)
 #+end_src
 ** Base directory
 #+begin_src emacs-lisp
