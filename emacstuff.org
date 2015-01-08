@@ -142,6 +142,7 @@
       flx-ido
       google-this
       highlight-parentheses
+      ibuffer-vc
       ido-ubiquitous
       iedit
       imenu-anywhere
@@ -413,9 +414,16 @@
 #+END_SRC
 * Sandbox and Scratch
 #+begin_src emacs-lisp
-  (defun jx--sandbox-general (ext)
-    (interactive "sExtension: ")
-    (find-file (jx--sandbox-file (concat "sandbox." ext))))
+  (defun jx-sandbox-general (arg ext)
+    (interactive "P\nsExtension: ")
+    (find-file
+     (jx--sandbox-file
+      (cond
+       ((equalp arg '()) (concat "sandbox." ext))
+       ((equalp arg '(4))
+        (concat (format-time-string "sandbox-%Y-%m-%d.") ext))
+       ((equalp arg '(16))
+        (concat "sandbox-" (org-read-date) "." ext))))))
 
   (defun jx--sandbox-racket ()
     (interactive)
@@ -425,10 +433,10 @@
     (interactive)
     (switch-to-buffer "*scratch*"))
 
-
-  (global-set-key (kbd "<f9> <f9>") 'jx--sandbox-general)
+  (global-set-key (kbd "<f9> <f9>") 'jx-sandbox-general)
   (global-set-key (kbd "<f9> r") 'jx--sandbox-racket)
   (global-set-key (kbd "<f9> s") 'jx--scratch)
+
 #+end_src
 * Org-mode
 ** Agenda
@@ -810,3 +818,4 @@
   (when (file-exists-p emacstuff--user-settings-file)
     (org-babel-load-file emacstuff--user-settings-file))
 #+end_src
+
