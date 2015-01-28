@@ -346,31 +346,6 @@
         (jx--completing-read-file/short-path prompt files)))
 
 #+end_src
-* Projectile
-#+begin_src emacs-lisp
-  (projectile-global-mode)
-  (setq projectile-indexing-method
-        (case system-type
-          (windows-nt 'alien)
-          (t 'native)))
-
-  (defun jx--projectile-project ()
-    (projectile-completing-read
-     "Projectile project: " (projectile-relevant-known-projects)))
-
-  (defun jx-magit-status (dir)
-    (interactive
-     (list (if current-prefix-arg
-               (if (= 4 (prefix-numeric-value current-prefix-arg))
-                   (jx--projectile-project)
-                 (magit-read-top-dir nil))
-             (or (magit-get-top-dir)
-                 (jx--projectile-project)
-                 (magit-read-top-dir nil)))))
-    (magit-status dir))
-
-  (global-set-key (kbd "C-x g") 'jx-magit-status)
-#+end_src
 * Deft
 #+begin_src emacs-lisp
   (setq deft-auto-save-interval 0)
@@ -805,6 +780,29 @@
     (add-hook (intern (format "%s-hook" mode))
               #'jx--engage-lisp-power))
 #+end_src
+* Projectile
+#+begin_src emacs-lisp
+  (projectile-global-mode)
+  (setq projectile-indexing-method
+        (case system-type
+          (windows-nt 'alien)
+          (t 'native)))
+
+  (defun jx--projectile-project ()
+    (projectile-completing-read
+     "Projectile project: " (projectile-relevant-known-projects)))
+
+  (defun jx-magit-status (dir)
+    (interactive
+     (list (if current-prefix-arg
+               (if (= 4 (prefix-numeric-value current-prefix-arg))
+                   (jx--projectile-project)
+                 (magit-read-top-dir nil))
+             (or (magit-get-top-dir)
+                 (jx--projectile-project)
+                 (magit-read-top-dir nil)))))
+    (magit-status dir))
+#+end_src
 
 * General key bindings
 #+begin_src emacs-lisp
@@ -826,7 +824,7 @@
   (global-set-key (kbd "C-+") 'text-scale-increase)
   (global-set-key (kbd "C--") 'text-scale-decrease)
 
-  (global-set-key (kbd "C-x g") 'magit-status)
+  (global-set-key (kbd "C-x g") 'jx-magit-status)
 
   (global-set-key (kbd "<f9> g") 'gnus)
 #+end_src
