@@ -353,6 +353,23 @@
         (case system-type
           (windows-nt 'alien)
           (t 'native)))
+
+  (defun jx--projectile-project ()
+    (projectile-completing-read
+     "Projectile project: " (projectile-relevant-known-projects)))
+
+  (defun jx-magit-status (dir)
+    (interactive
+     (list (if current-prefix-arg
+               (if (= 4 (prefix-numeric-value current-prefix-arg))
+                   (jx--projectile-project)
+                 (magit-read-top-dir nil))
+             (or (magit-get-top-dir)
+                 (jx--projectile-project)
+                 (magit-read-top-dir nil)))))
+    (magit-status dir))
+
+  (global-set-key (kbd "C-x g") 'jx-magit-status)
 #+end_src
 * Deft
 #+begin_src emacs-lisp
@@ -719,6 +736,7 @@
 #+begin_src emacs-lisp
   (setq next-line-add-newlines t)
   (visible-mark-mode 1)
+  (require 'imenu)
   (global-set-key (kbd "M-i") 'imenu-anywhere)
 #+END_SRC
 
