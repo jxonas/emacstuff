@@ -801,6 +801,8 @@
     (projectile-completing-read
      "Projectile project: " (projectile-relevant-known-projects)))
 
+  (require 'magit)
+
   (defun jx-magit-status (dir)
     (interactive
      (list (if current-prefix-arg
@@ -843,4 +845,5 @@
   (when (file-exists-p emacstuff--user-settings-file)
     (org-babel-load-file emacstuff--user-settings-file))
 #+end_src
+
 
