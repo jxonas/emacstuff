@@ -157,7 +157,8 @@
       rainbow-delimiters
       smart-mode-line
       smex
-      visible-mark)
+      visible-mark
+      writeroom-mode)
     "Libraries that should be installed by default.")
 
   (unless package-archive-contents
@@ -244,6 +245,11 @@
 #+begin_src emacs-lisp
   (google-this-mode 1)
 #+end_src
+** Writeroom-mode
+#+begin_src emacs-lisp
+  (global-set-key (kbd "C-<f1>") 'writeroom-mode)
+#+end_src
+
 * Vendor directory
 #+begin_src emacs-lisp
   (defvar emacstuff-vendor-dir (expand-file-name "vendor" emacstuff-dir))
