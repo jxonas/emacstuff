@@ -149,6 +149,7 @@
       magit
       markdown-mode
       multiple-cursors
+      pandoc-mode
       paredit
       pretty-lambdada
       projectile
@@ -208,6 +209,8 @@
   (add-to-list 'auto-mode-alist '("\\.text\\'" . markdown-mode))
   (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
   (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+
+  (add-hook 'markdown-mode-hook 'pandoc-mode)
 #+end_src
 ** Multiple cursors
 #+begin_src emacs-lisp
