@@ -197,6 +197,7 @@
   (require 'iedit)
 
   (global-set-key (kbd "C-c ;") 'iedit-mode)
+  (global-set-key (kbd "C-c ,") 'iedit-mode)
 #+end_src
 ** Auto-complete
 #+begin_src emacs-lisp
@@ -838,6 +839,8 @@
   (global-set-key (kbd "C-x g") 'jx-magit-status)
 
   (global-set-key (kbd "<f9> g") 'gnus)
+
+  (global-set-key (kbd "C-;") 'comment-dwim)
 #+end_src
 * Specific settings
 #+begin_src emacs-lisp
