@@ -248,7 +248,7 @@
 #+end_src
 ** Writeroom-mode
 #+begin_src emacs-lisp
-  (global-set-key (kbd "C-<f1>") 'writeroom-mode)
+  (global-set-key (kbd "M-<f1>") 'writeroom-mode)
 #+end_src
 
 * Vendor directory
@@ -371,7 +371,7 @@
     (deft-refresh))
 
   (global-set-key (kbd "<f7>") (lambda () (interactive) (jx--deft "org" "gpg" 'org-mode)))
-  (global-set-key (kbd "C-<f7>") (lambda () (interactive) (jx--deft "md" "gpg" 'markdown-mode)))
+  (global-set-key (kbd "M-<f7>") (lambda () (interactive) (jx--deft "md" "gpg" 'markdown-mode)))
 #+end_src
 * Racket mode
 #+begin_src emacs-lisp
