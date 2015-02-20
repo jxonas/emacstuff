@@ -413,6 +413,27 @@
   (define-key racket-repl-mode-map "\C-c\M-o" 'racket-repl-clear-buffer)
   (define-key racket-mode-map "\C-c\M-o" 'racket-clear-repl-buffer)
 #+END_SRC
+* Spelling
+#+begin_src emacs-lisp
+  (dolist (hook '(text-mode-hook))
+    (add-hook hook (lambda () (flyspell-mode 1))))
+
+  (dolist (hook '(change-log-mode-hook log-edit-mode-hook))
+    (add-hook hook (lambda () (flyspell-mode -1))))
+
+  (let ((langs '("pt_BR" "en")))
+    (setq lang-ring (make-ring (length langs)))
+    (dolist (elem langs) (ring-insert lang-ring elem)))
+
+  (defun jx--cycle-ispell-languages ()
+    (interactive)
+    (let ((lang (ring-ref lang-ring -1)))
+      (ring-insert lang-ring lang)
+      (ispell-change-dictionary lang)))
+
+  (global-set-key [f6] 'jx--cycle-ispell-languages)
+#+end_src
+
 * Sandbox and Scratch
 #+begin_src emacs-lisp
   (defun jx-sandbox-general (arg ext)
