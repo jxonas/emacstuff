@@ -414,6 +414,14 @@
   (define-key racket-repl-mode-map "\C-c\M-o" 'racket-repl-clear-buffer)
   (define-key racket-mode-map "\C-c\M-o" 'racket-clear-repl-buffer)
 #+END_SRC
+* View mode
+#+begin_src emacs-lisp
+  ;; view docs
+  (fset 'doc-prev "\C-xo\C-x[\C-xo")
+  (fset 'doc-next "\C-xo\C-x]\C-xo")
+  (global-set-key (kbd "M-[") 'doc-prev)
+  (global-set-key (kbd "M-]") 'doc-next)
+#+end_src
 * Spelling
 #+begin_src emacs-lisp
   (dolist (hook '(text-mode-hook))
