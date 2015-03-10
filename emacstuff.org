@@ -125,6 +125,27 @@
   ;; Handy key definition
   (define-key global-map "\C-\M-Q" 'unfill-region)
 
+  (defun jx-uniquify-all-lines-region (start end arg)
+    "Find duplicate lines in region START to END keeping first occurrence."
+    (interactive "*rp")
+    (cond
+     ((= arg 4) (sort-lines nil start end))
+     ((= arg 16) (sort-lines 'reverse  start end)))
+    (save-excursion
+      (let ((end (copy-marker end)))
+        (while
+            (progn
+              (goto-char start)
+              (re-search-forward "^\\(.*\\)\n\\(\\(.*\n\\)*\\)\\1\n" end t))
+          (replace-match "\\1\n\\2")))))
+
+  (defun jx-uniquify-all-lines-buffer (arg)
+    "Delete duplicate lines in buffer and keep first occurrence."
+    (interactive "*p")
+    (jx-uniquify-all-lines-region (point-min) (point-max) arg))
+
+  (defalias 'jx-remove-duplicates 'jx-uniquify-all-lines-buffer)
+
 #+end_src
 * Eldoc
 #+begin_src emacs-lisp
