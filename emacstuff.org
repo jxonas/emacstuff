@@ -144,8 +144,6 @@
     (interactive "*p")
     (jx-uniquify-all-lines-region (point-min) (point-max) arg))
 
-  (defalias 'jx-remove-duplicates 'jx-uniquify-all-lines-buffer)
-
 #+end_src
 * Eldoc
 #+begin_src emacs-lisp
@@ -911,5 +909,9 @@
   (when (file-exists-p emacstuff--user-settings-file)
     (org-babel-load-file emacstuff--user-settings-file))
 #+end_src
-
-
+* Aliases
+#+begin_src emacs-lisp
+  (defalias 'list-buffers 'ibuffer)
+  (defalias 'jx-remove-duplicates 'jx-uniquify-all-lines-buffer)
+  (defalias 'yes-or-no-p 'y-or-n-p)
+#+end_src
