@@ -144,6 +144,9 @@
     (interactive "*p")
     (jx-uniquify-all-lines-region (point-min) (point-max) arg))
 
+  (defun jx-restart ()
+    (interactive)
+    (org-babel-load-file (expand-file-name "emacstuff.org" emacstuff-dir)))
 #+end_src
 * Eldoc
 #+begin_src emacs-lisp
@@ -189,7 +192,8 @@
       smart-mode-line
       smex
       visible-mark
-      writeroom-mode)
+      writeroom-mode
+      web-mode)
     "Libraries that should be installed by default.")
 
   (unless package-archive-contents
