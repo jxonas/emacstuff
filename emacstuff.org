@@ -465,7 +465,7 @@
   (dolist (hook '(racket-mode-hook java-mode-hook lisp-mode-hook))
       (add-hook hook (lambda () (flyspell-prog-mode))))
 
-  (dolist (hook '(change-log-mode-hook log-edit-mode-hook))
+  (dolist (hook '(magit-auto-revert magit-mode change-log-mode-hook log-edit-mode-hook))
     (add-hook hook (lambda () (flyspell-mode -1))))
 
   (let ((langs '("pt_BR" "en")))
@@ -898,6 +898,7 @@
      "Projectile project: " (projectile-relevant-known-projects)))
 
   (require 'magit)
+  (setq magit-last-seen-setup-instructions "1.4.0")
 
   (defun jx-magit-status (dir)
     (interactive
