@@ -468,7 +468,7 @@
   (dolist (hook '(magit-auto-revert magit-mode change-log-mode-hook log-edit-mode-hook))
     (add-hook hook (lambda () (flyspell-mode -1))))
 
-  (let ((langs '("pt_BR" "en")))
+  (let ((langs '("brasileiro" "american")))
     (setq lang-ring (make-ring (length langs)))
     (dolist (elem langs) (ring-insert lang-ring elem)))
 
