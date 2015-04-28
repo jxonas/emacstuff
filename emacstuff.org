@@ -831,6 +831,10 @@
   (global-set-key (kbd "C-c n") 'jx-cleanup-buffer)
 
   (setq-default show-trailing-whitespace t)
+
+  (dolist (mode '(racket-repl-mode))
+    (add-hook (intern (format "%s-hook" mode))
+              (lambda () (setq-local show-trailing-whitespace nil))))
 #+end_src
 * Power Lisp
 #+begin_src emacs-lisp
@@ -938,15 +942,15 @@
 
   (global-set-key (kbd "C-;") 'comment-dwim)
 #+end_src
-* Specific settings
-#+begin_src emacs-lisp
-  (defvar emacstuff--user-settings-file (emacstuff-file (concat (user-login-name) ".org")))
-  (when (file-exists-p emacstuff--user-settings-file)
-    (org-babel-load-file emacstuff--user-settings-file))
-#+end_src
 * Aliases
 #+begin_src emacs-lisp
   (defalias 'list-buffers 'ibuffer)
   (defalias 'jx-remove-duplicates 'jx-uniquify-all-lines-buffer)
   (defalias 'yes-or-no-p 'y-or-n-p)
+#+end_src
+* Specific settings
+#+begin_src emacs-lisp
+  (defvar emacstuff--user-settings-file (emacstuff-file (concat (user-login-name) ".org")))
+  (when (file-exists-p emacstuff--user-settings-file)
+    (org-babel-load-file emacstuff--user-settings-file))
 #+end_src
