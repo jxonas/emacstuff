@@ -1,10 +1,27 @@
 #+SEQ_TODO: FIXME FIXED
 
 * Secret
+
+=emacstuff.el= contains common stuff. Machine dependent or secret
+stuff --- like passwords --- must reside in =secret.el=. If not
+present, /good enough/ defaults are provided.
+
+It is advisable to provide at least the following information:
+
+  - =emacstuff-initial-directory= :: the initial directory Emacs
+       should be in. Defaults to =U:/sandbox= if on Windows and
+       =~/sandbox/= otherwise.
+
+  - =emacstuff-sandbox-directory= :: directory used as
+       sandbox. Defaults to =U:/sandbox= if on Windows and
+       =~/sandbox/= otherwise.
+
 #+begin_src emacs-lisp
+  ;; load machine dependent or secret stuff
   (when (file-exists-p (emacstuff-file "secret.el"))
     (load-file (emacstuff-file "secret.el")))
 #+end_src
+
 * Basic configuration
 ** Custom.el
 #+begin_src emacs-lisp
@@ -19,6 +36,7 @@
 #+end_src
 ** Base directory
 #+begin_src emacs-lisp
+
   (when (eq 'windows-nt system-type)
     (cd "u:/sandbox"))
 
