@@ -1,6 +1,7 @@
 #+SEQ_TODO: FIXME FIXED
 
-* Secret
+* Basic configuration
+** Machine dependent and secret stuff
 
 =emacstuff.el= contains common stuff. Machine dependent or secret
 stuff --- like passwords --- must reside in =secret.el=. If not
@@ -21,8 +22,6 @@ It is advisable to provide at least the following information:
   (when (file-exists-p (emacstuff-file "secret.el"))
     (load-file (emacstuff-file "secret.el")))
 #+end_src
-
-* Basic configuration
 ** Custom.el
    We don't want to pollute =init.el= as it is supposed to be
    general...
