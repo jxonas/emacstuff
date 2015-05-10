@@ -24,6 +24,9 @@ It is advisable to provide at least the following information:
 
 * Basic configuration
 ** Custom.el
+   We don't want to pollute =init.el= as it is supposed to be
+   general...
+
 #+begin_src emacs-lisp
   (setq emacstuff-custom-file (emacstuff-file "custom.el"))
 
@@ -37,16 +40,22 @@ It is advisable to provide at least the following information:
 ** Base directory
 #+begin_src emacs-lisp
 
-  (when (eq 'windows-nt system-type)
-    (cd "u:/sandbox"))
+  (unless (boundp 'emacstuff-initial-directory)
+    (setq emacstuff-initial-directory
+          (case system-type
+            (windows-nt "u:/sandbox")
+            (t "~/sandbox"))))
 
-  (setq sandbox-directory
-        (case system-type
-          (windows-nt "u:/sandbox/")
-          (t "~/sandbox/")))
+  (cd emacstuff-initial-directory)
+
+  (unless (boundp 'emacstuff-sandbox-directory)
+    (setq emacstuff-sandbox-directory
+          (case system-type
+            (windows-nt "u:/sandbox")
+            (t "~/sandbox"))))
 
   (defsubst jx--sandbox-file (file)
-    (expand-file-name file sandbox-directory))
+    (expand-file-name file emacstuff-sandbox-directory))
 #+end_src
 ** Server
 #+begin_src emacs-lisp
