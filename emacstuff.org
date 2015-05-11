@@ -22,7 +22,7 @@ It is advisable to provide at least the following information:
   (when (file-exists-p (emacstuff-file "secret.el"))
     (load-file (emacstuff-file "secret.el")))
 #+end_src
-** Custom.el
+** Save customization to custom.el
    We don't want to pollute =init.el= as it is supposed to be
    general...
 
@@ -38,7 +38,6 @@ It is advisable to provide at least the following information:
 #+end_src
 ** Base directory
 #+begin_src emacs-lisp
-
   (unless (boundp 'emacstuff-initial-directory)
     (setq emacstuff-initial-directory
           (case system-type
@@ -46,15 +45,6 @@ It is advisable to provide at least the following information:
             (t "~/sandbox"))))
 
   (cd emacstuff-initial-directory)
-
-  (unless (boundp 'emacstuff-sandbox-directory)
-    (setq emacstuff-sandbox-directory
-          (case system-type
-            (windows-nt "u:/sandbox")
-            (t "~/sandbox"))))
-
-  (defsubst jx--sandbox-file (file)
-    (expand-file-name file emacstuff-sandbox-directory))
 #+end_src
 ** Server
 #+begin_src emacs-lisp
@@ -73,7 +63,8 @@ It is advisable to provide at least the following information:
 #+end_src
 ** Start Maximized
 #+begin_src emacs-lisp
- (add-hook 'window-setup-hook 'toggle-frame-maximized t)
+  (when (fboundp 'toggle-frame-maximized)
+    (add-hook 'window-setup-hook 'toggle-frame-maximized t))
 #+end_src
 ** Basic modes
 #+begin_src emacs-lisp
@@ -509,6 +500,15 @@ It is advisable to provide at least the following information:
 
 * Sandbox and Scratch
 #+begin_src emacs-lisp
+  (unless (boundp 'emacstuff-sandbox-directory)
+    (setq emacstuff-sandbox-directory
+          (case system-type
+            (windows-nt "u:/sandbox")
+            (t "~/sandbox"))))
+
+  (defsubst jx--sandbox-file (file)
+    (expand-file-name file emacstuff-sandbox-directory))
+
   (defun jx-sandbox-general (arg ext)
     (interactive "P\nsExtension: ")
     (find-file
