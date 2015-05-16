@@ -76,7 +76,7 @@ It is advisable to provide at least the following information:
   (tooltip-mode -1)
   (setq tooltip-use-echo-area t)
   (put 'narrow-to-region 'disabled nil)
-  (global-visual-line-mode 1)
+  ;(global-visual-line-mode 1)
   (global-linum-mode 1)
 #+end_src
 ** Remove prompts
